@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fabric } from 'fabric'
   import { onMount } from 'svelte'
-  import { selectedComponent, canvasElement, shapeElement, drawingElement, dragElement, cropElement, resizeElement, filterElement } from '$src/store/canvas'
+  import { selectedComponent, canvasElement, shapeElement, drawingElement, dragElement, cropElement, resizeElement, filterElement, controlElement } from '$src/store/canvas'
   import { loadImage, drag, Zoom, downLoadImage } from '$lib/js/canvas'
   import { deleteActiveObjects } from '$lib/js/control'
   import { shape } from '$lib/js/shape'
@@ -9,6 +9,7 @@
   import { crop } from '$lib/js/crop'
   import { resize } from '$lib/js/resize'
   import { filter } from '$lib/js/filter'
+  import { control } from '$lib/js/control'
 
   import type { SvelteComponentTyped } from 'svelte'
   import type { CanvasOptionsUpdateComponent } from '$src/types/canvas'
@@ -66,6 +67,7 @@
     cropElement.set(new crop($canvasElement))
     resizeElement.set(new resize($canvasElement))
     filterElement.set(new filter())
+    controlElement.set(new control($canvasElement))
 
     $canvasElement.on('mouse:down', (options) => {
       if ($drawingElement.polygonMode || $shapeElement.shapeMode || $canvasElement.isDrawingMode) {
@@ -108,9 +110,12 @@
       if ($cropElement.cropMode) $cropElement.updateCropScale() // crop 그리기시작
     })
 
+    
     setDefaultimage()
-    document.addEventListener('keydown', removeObjects)
-    return () => document.removeEventListener('keydown', removeObjects)
+    document.addEventListener('keydown', hotKey)
+    return () => {
+      document.removeEventListener('keydown', hotKey)
+    }
   })
 
   async function setDefaultimage () {
@@ -139,9 +144,17 @@
     }
   }
 
-  function removeObjects (e: KeyboardEvent) {
-    // 삭제버튼 클릭시 캔버스에서 선택된 요소 삭제하기
-    e.key === 'Delete' && deleteActiveObjects($canvasElement)
+  function hotKey (e: KeyboardEvent) {
+    if (e.key === 'Delete') {
+      // 삭제
+      deleteActiveObjects($canvasElement)
+    } else if (e.key === 'c' && e.ctrlKey) {
+        // 복사
+        $controlElement.copy()
+      } else if (e.key === 'v' && e.ctrlKey) {
+        // 붙여넣기
+        $controlElement.paste()
+      }
   }
 
   function setCanvasOption (e: fabric.IEvent) {
