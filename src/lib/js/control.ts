@@ -1,6 +1,57 @@
 import type { CustomCanvas } from '$src/types/canvas'
 import type { DrawingOptionType, Color } from '$src/types/canvas'
 
+
+class control {
+  canvas: CustomCanvas // 캔버스
+  clipBoard: fabric.Group | null = null
+
+  constructor(canvas: CustomCanvas) {
+    this.canvas = canvas
+  }
+
+  copy () {
+    const target = this.canvas.getActiveObject()
+    if (target) {
+      target.clone((cloned: fabric.Group) => {
+        this.clipBoard = cloned
+      })
+    }
+  }
+
+  paste() {
+    if (this.clipBoard) {
+      this.clipBoard.clone((cloned: fabric.Group) => {
+        this.canvas.discardActiveObject()
+        // 대상의 위치 재조정
+        cloned.set({
+          left: cloned.left ?? 0 + 10,
+          top: cloned.top ?? 0 + 10,
+          evented: true,
+        })
+        if (cloned.type === 'activeSelection') {
+          // 대상이 다수선택인경우
+          cloned.canvas = this.canvas
+          cloned.forEachObject((obj: fabric.Object) => {
+            this.canvas.add(obj)
+          })
+          cloned.setCoords()
+        } else {
+          this.canvas.add(cloned)
+        }
+        // 생성한 대상 선택후 재 랜더링
+        this.canvas.setActiveObject(cloned)
+        if (cloned.top && cloned.left) {
+          cloned.top = cloned.top + 10
+          cloned.left =  cloned.left + 10
+        }
+        this.clipBoard = cloned
+      })
+      this.canvas.requestRenderAll()
+    }
+  }
+}
+
 // 캔버스 내부 오브젝트에 대한 컨트롤을 담당
 function objectLock(canvas: CustomCanvas, {isLock}: {isLock?: boolean}) {
   // isLock = true면 잠금 false면 해제
@@ -83,7 +134,7 @@ function bringToFront (canvas: CustomCanvas) {
 }
 
 function copyObject (canvas: CustomCanvas) {
-  // 복사하기
+  // 선택된 객체 복사하기
   const activeObjects = canvas.getActiveObjects()
   if (activeObjects.length > 0) {
     canvas.getActiveObject()?.clone((cloned: fabric.ActiveSelection) => {
@@ -114,7 +165,6 @@ function copyObject (canvas: CustomCanvas) {
         canvas.requestRenderAll()
       }
     })
-  
   }
 }
 
@@ -161,6 +211,7 @@ function updateVariable(e: fabric.IEvent, variable: DrawingOptionType) {
 }
 
 export {
+  control,
   objectLock,
   setCanvasObject,
   setCanvasText,
