@@ -81,6 +81,19 @@ interface BlendOptions {
   alpha: number
 }
 
+interface HistoryData {
+  version: string
+  objects: fabric.Object[]
+}
+
+interface HistoryItem {
+  name: string 
+  data: HistoryData
+  active: boolean
+}
+
+type HistoryList = Array<HistoryItem>
+
 export type {
   LeaveComponent,
   CustomCanvas,
@@ -91,5 +104,8 @@ export type {
   CropOtions,
   FilterColormatrix,
   FilterImageControl,
-  BlendOptions
+  BlendOptions,
+  HistoryData,
+  HistoryItem,
+  HistoryList
 }

@@ -111,13 +111,57 @@ html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abb
 /* canvas default style */
 .editor-canvas-container{
   display: flex;
-  margin:auto;
-  padding:2rem 0;
+  margin: auto;
   justify-content: center;
 }
 
 .editor-canvas-container canvas {
   border: 1px solid var(--menu-background)
+}
+
+
+/* canvas sidebar */
+.editor-canvas-sidebar {
+  display: flex;
+	width: 100%;
+  margin: auto;
+	align-items: center;
+  justify-content: space-between;
+}
+
+.editor-canvas-sidebar-control {
+	width:10%;
+	max-width:200px;
+}
+
+.editor-canvas-sidebar-control h2 {
+	padding-bottom: 0.5rem;
+	text-align: center;
+}
+
+.editor-canvas-sidebar-control ul {
+	display: flex;
+	flex-direction: column;
+	height:50vh;
+	gap:0.5rem;
+	background: rgba(255,255,255,0.3);
+	overflow-y: scroll;
+}
+
+.editor-canvas-sidebar-control ul li.active {
+	background: rgba(255,255,255,0.3);
+}
+
+.editor-canvas-sidebar-control ul li.active button {
+	color: #fff;
+}
+
+.editor-canvas-sidebar-control ul li button {
+	width: 100%;
+	padding:0.3rem;
+	cursor: pointer;
+	border: none;
+	background: transparent;
 }
 
 /* editor inside options */

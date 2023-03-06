@@ -23,7 +23,7 @@
 
     if($drawingElement.polygonMode) {
       // 폴리곤 모드일경우 가이드 포인트 생성
-      $drawingElement.addPoint(options);
+      $drawingElement.addPoint(options)
     }
   }
 
@@ -31,10 +31,10 @@
     // 마우스 이동시
     if($drawingElement.activeLine){
       // 활성화중인 선이 있다면 마우스를 추적하는 선 그리기
-      const pointer = $canvasElement.getPointer(options.e);
-      $drawingElement.activeLine.set({ x2: pointer.x, y2: pointer.y });
+      const pointer = $canvasElement.getPointer(options.e)
+      $drawingElement.activeLine.set({ x2: pointer.x, y2: pointer.y })
     }
-    $canvasElement.renderAll();
+    $canvasElement.renderAll()
   }
 
   let drawingMode: boolean | undefined = false // 그리기모드 여부
@@ -63,7 +63,7 @@
   onMount(() => {
     document.addEventListener('keydown', endDrawingMode)
     return () => {
-      document.removeEventListener('keydown', endDrawingMode);
+      document.removeEventListener('keydown', endDrawingMode)
       $drawingElement.reset()
       $drawingElement.generatePolygon({stroke: variable.stroke, fill: variable.fill})
     }
@@ -75,7 +75,7 @@
 <DrawingOptions variable={variable}></DrawingOptions>
 <div class="editor-icons">
   {#if !drawingMode}
-    <Popper contents="펜그리기">
+    <Popper contents="path">
       <button 
         on:click={() => togglePencil(true)}>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
@@ -85,18 +85,18 @@
       </button>
     </Popper>
 
-    <Popper contents="선그리기">
+    <Popper contents="polygon">
       <button 
         on:click={() => $drawingElement.setPolygonMod()}>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-          <path fill-rule="evenodd" d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
+          <path d="M7.779.052a.5.5 0 0 1 .442 0l6.015 2.97a.5.5 0 0 1 .267.34l1.485 6.676a.5.5 0 0 1-.093.415l-4.162 5.354a.5.5 0 0 1-.395.193H4.662a.5.5 0 0 1-.395-.193L.105 10.453a.5.5 0 0 1-.093-.415l1.485-6.676a.5.5 0 0 1 .267-.34L7.779.053zM2.422 3.813l-1.383 6.212L4.907 15h6.186l3.868-4.975-1.383-6.212L8 1.058 2.422 3.813z"/>
         </svg>
       </button>
     </Popper>
   {/if}
 
   {#if drawingMode}
-    <Popper contents="펜그리기종료">
+    <Popper contents="end_pen">
       <button 
         on:click={() => togglePencil(false)}>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">

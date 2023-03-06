@@ -1,8 +1,7 @@
 import { fabric } from 'fabric'
 import { objectLock } from '$lib/js/control'
-import { canvasElement } from '$src/store/canvas'
-import type { CustomCanvas } from '$src/types/canvas'
-import type { DrawingOptionType, ZoomOptions } from '$src/types/canvas'
+import { canvasElement, historyStore } from '$src/store/canvas'
+import type { CustomCanvas, DrawingOptionType, ZoomOptions, HistoryItem, HistoryList } from '$src/types/canvas'
 
 // 캔버스 전체적인 세팅에 대한 변경을 담당
 class drag {
@@ -64,9 +63,102 @@ class drag {
   }
 }
 
+class history {
+  canvas: CustomCanvas // 캔버스
+
+  constructor (canvas: CustomCanvas) {
+    this.canvas = canvas
+  }
+
+  saveData (name: string) {
+    // 세이브 추가 active된 index 찾기
+    let history: HistoryList | undefined
+    const unsubscribe = historyStore.subscribe(x => history = x)
+    if (history) {
+      const index = history.findIndex(x => x.active)
+      if (typeof index == 'number' && index > -1) {
+        // active된 값이 있다면 slice 후 그 뒤에 저장
+        historyStore.update(list => {
+          list[index].active = false
+          list = list.slice(0, index + 1)
+          return list
+        })
+      }
+      historyStore.update(list => {
+        list.push({
+          name: name,
+          data: this.canvas.toDatalessJSON(),
+          active: true,
+        })
+        return list
+      })
+    }
+    unsubscribe()
+  }
+
+  change ({index, type}: {index?: number, type?: 'undo'|'redo'}) {
+    if (index != undefined || type) {
+      let history: HistoryList | undefined
+      const unsubscribe = historyStore.subscribe(x => history = x)
+      if (history && history.length > 0) {
+        let result: HistoryItem | undefined;
+        const from = history.find(x => x.active)
+        if (index != undefined) {
+          // index값이 있다면 해당값으로 변경
+          historyStore.update(list => {
+            // 모든값 active 제거
+            list.map(x => {
+              if (x.active) {
+                x.active = false
+              }
+              return x
+            })
+            // 해당 값을 active 시켜주기
+            list[index].active = true
+            result = list[index]
+            return list
+          })
+        } else {
+          // 없다면 active 각각 undo redo 해주기
+          const active = history.findIndex(x => x.active)
+          const i = type == 'undo' ? active - 1 : active + 1
+          
+          historyStore.update(list => {
+            if (list[i]) {
+              // 값이 존재하는 경우만 실행
+              list[active].active = false
+              list[i].active = true
+              result = list[i]
+            }
+            return list
+          })
+        }
+  
+        if (result) {
+          // 성공시 canvas를 재 랜더링한다
+          this.canvas.loadFromJSON(result.data, () => {
+            const object = this.canvas.getObjects().find(x => x.type == 'image')
+            if (object) {
+              object.set({ hasBorders: false, hasControls: false, selectable: false, hoverCursor: 'default' })
+              this.canvas.requestRenderAll()
+            }
+            if (from?.name == 'resize' || from?.name == 'crop') {
+              // 리사이즈 혹은 crop인경우 캔버스 사이즈 재조정
+              const image = this.canvas.getObjects().find(x => x.type == 'image')
+              console.log(image)
+              if (image && image.width && image.height) canvasResize(this.canvas, image.width, image.height)
+            }
+            canvasElement.update(state => state)
+          })
+        }
+      }
+      unsubscribe()
+    }
+  }
+}
+
 async function loadImage(canvas: CustomCanvas, image: File) {
   const event = await fileLoad(image)
-  // const event = await fileLoad(new File(['0', '1'], 'test')) as ProgressEvent<FileReader>
   // 파일로드 완료시 기존내용 초기화
   canvas.clear()
   canvas.imagePath = ''
@@ -102,6 +194,7 @@ async function loadImage(canvas: CustomCanvas, image: File) {
       if (object) {
         object.set({ hasBorders: false, hasControls: false, selectable: false, hoverCursor: 'default' })
         canvas.requestRenderAll()
+        new history(canvas).saveData('image_load')
         resolve(imgObj)
       }
     }
@@ -217,12 +310,21 @@ function downLoadImage(canvas: CustomCanvas) {
   link.remove()
 }
 
+function selectObject (canvas: CustomCanvas, index: number) {
+  canvas.discardActiveObject()
+  const objects = canvas.getObjects()
+  canvas.setActiveObject(objects[index])
+  canvas.requestRenderAll()
+}
+
 export {
   drag,
+  history,
   loadImage,
   canvasResize,
   canvasMaxWidth,
   setVariable,
   downLoadImage,
-  Zoom
+  Zoom,
+  selectObject
 }

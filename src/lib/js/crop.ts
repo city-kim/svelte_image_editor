@@ -1,6 +1,7 @@
 import { fabric } from 'fabric'
 import { objectLock } from '$lib/js/control'
 import { canvasResize } from '$lib/js/canvas'
+import { history } from '$lib/js/canvas'
 import type { LeaveComponent, CustomCanvas } from '$src/types/canvas'
 
 class crop {
@@ -76,6 +77,7 @@ class crop {
       if (!this.target) {
         // 박스 새로생성
         this.target = new fabric.Rect({
+          type: 'crop',
           strokeWidth: this.strokeWidth,
           stroke: this.stroke,
           fill: this.fill,
@@ -238,6 +240,7 @@ class crop {
       for (let i=1; i<y; i++) row.push(new fabric.Line([0, h*i, w*x, h*i], {...stroke}))
 
       const group = new fabric.Group([rect, ...column, ...row], {
+        type: 'crop',
         transparentCorners: false,
         cornerSize: this.canvas.cornerSize,
       })
@@ -283,6 +286,7 @@ class crop {
         this.target = null
       }
       this.canvas.requestRenderAll()
+      new history(this.canvas).saveData('crop')
     }
   }
 }

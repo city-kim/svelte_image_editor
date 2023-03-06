@@ -40,7 +40,7 @@ $: if ($filterElement) {
               <input type="range"
                 id="Brightness"
                 bind:value={list.value}
-                on:input={() => $filterElement.updateFilter(list)}
+                on:change={() => $filterElement.updateFilter(list)}
                 min="{list.min}" max="{list.max}" step="{list.step}"/>
             </div>
           {/if}
@@ -64,14 +64,14 @@ $: if ($filterElement) {
         <input type="color"
           id="Color"
           bind:value={Blend.color}
-          on:input={() => $filterElement.changeBlandMode(Blend)}/>
+          on:change={() => $filterElement.changeBlandMode(Blend)}/>
       </div>
       <div>
         <label for="Alpha">Alpha</label>
         <input type="range"
           id="Alpha"
           bind:value={Blend.alpha}
-          on:input={() => $filterElement.changeBlandMode(Blend)}
+          on:change={() => $filterElement.changeBlandMode(Blend)}
           min="0" max="1" step="0.1"/>
       </div>
     </div>

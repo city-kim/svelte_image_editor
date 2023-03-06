@@ -1,19 +1,22 @@
 import type { CustomCanvas } from '$src/types/canvas'
 import type { DrawingOptionType, Color } from '$src/types/canvas'
-
+import { canvasElement } from '$src/store/canvas'
+import { history } from '$lib/js/canvas'
 
 class control {
+  history: history
   canvas: CustomCanvas // 캔버스
-  clipBoard: fabric.Group | null = null
+  clipBoard: fabric.ActiveSelection | null = null
 
   constructor(canvas: CustomCanvas) {
     this.canvas = canvas
+    this.history = new history(this.canvas)
   }
 
   copy () {
     const target = this.canvas.getActiveObject()
     if (target) {
-      target.clone((cloned: fabric.Group) => {
+      target.clone((cloned: fabric.ActiveSelection) => {
         this.clipBoard = cloned
       })
     }
@@ -21,9 +24,9 @@ class control {
 
   paste() {
     if (this.clipBoard) {
-      this.clipBoard.clone((cloned: fabric.Group) => {
+      this.clipBoard.clone((cloned: fabric.ActiveSelection) => {
         this.canvas.discardActiveObject()
-        // 대상의 위치 재조정
+        // 위치 재조정
         cloned.set({
           left: cloned.left ?? 0 + 10,
           top: cloned.top ?? 0 + 10,
@@ -47,6 +50,8 @@ class control {
         }
         this.clipBoard = cloned
       })
+      this.history.saveData('paste')
+      canvasElement.update(state => state)
       this.canvas.requestRenderAll()
     }
   }
@@ -62,6 +67,7 @@ function objectLock(canvas: CustomCanvas, {isLock}: {isLock?: boolean}) {
       o.hoverCursor = isLock ? 'default' :'move'
     }
   })
+  canvasElement.update(state => state)
   canvas.requestRenderAll()
 }
 
@@ -111,6 +117,8 @@ function deleteActiveObjects(canvas: CustomCanvas) {
     })
   }
   canvas.discardActiveObject().requestRenderAll()
+  canvasElement.update(state => state)
+  new history(canvas).saveData('delete')
 }
 
 function sendToBack (canvas: CustomCanvas) {
@@ -121,6 +129,7 @@ function sendToBack (canvas: CustomCanvas) {
       canvas.sendBackwards(obj)
     })
   }
+  canvasElement.update(state => state)
 }
 
 function bringToFront (canvas: CustomCanvas) {
@@ -131,6 +140,7 @@ function bringToFront (canvas: CustomCanvas) {
       canvas.bringForward(obj)
     })
   }
+  canvasElement.update(state => state)
 }
 
 function copyObject (canvas: CustomCanvas) {
@@ -156,6 +166,7 @@ function copyObject (canvas: CustomCanvas) {
         } else {
           canvas.add(cloned)
         }
+        new history(canvas).saveData('paste')
         if (cloned.top && cloned.left) {
           cloned.top += 10
           cloned.left += 10
@@ -210,6 +221,24 @@ function updateVariable(e: fabric.IEvent, variable: DrawingOptionType) {
   return result
 }
 
+function group (canvas: CustomCanvas) {
+  const target = canvas.getActiveObject() as fabric.ActiveSelection
+  if (target && target.type === 'activeSelection') {
+    target.toGroup()
+    canvas.requestRenderAll()
+    canvasElement.update(state => state)
+  }
+}
+
+function unGroup (canvas: CustomCanvas) {
+  const target = canvas.getActiveObject() as fabric.Group
+  if (target && target.type === 'group') {
+    target.toActiveSelection()
+    canvas.requestRenderAll()
+    canvasElement.update(state => state)
+  }
+}
+
 export {
   control,
   objectLock,
@@ -220,4 +249,6 @@ export {
   bringToFront,
   copyObject,
   updateVariable,
+  group,
+  unGroup
 }

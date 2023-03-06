@@ -1,4 +1,6 @@
 import { fabric } from 'fabric'
+import { canvasElement } from '$src/store/canvas'
+import { history } from '$lib/js/canvas'
 import type { CustomCanvas } from '$src/types/canvas'
 import type { Color } from '$src/types/canvas'
 
@@ -8,6 +10,7 @@ const polygonPointArray = { // shape 폴리곤 배열
 }
 
 class shape {
+  history: history
   canvas: CustomCanvas // 캔버스
   optionGroup: {
     transparentCorners: boolean
@@ -23,6 +26,7 @@ class shape {
 
   constructor(canvas: CustomCanvas) {
     this.canvas = canvas
+    this.history = new history(this.canvas)
     this.optionGroup = {
       transparentCorners: false,
       padding: 1
@@ -173,6 +177,8 @@ class shape {
       ...this.optionGroup,
       cornerSize: this.canvas.cornerSize
     }))
+    this.history.saveData('add_text')
+    canvasElement.update(state => state)
   }
 }
 

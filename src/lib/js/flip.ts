@@ -1,3 +1,5 @@
+import { canvasElement } from '$src/store/canvas'
+import { history } from '$lib/js/canvas'
 import type { CustomCanvas } from '$src/types/canvas'
 
 function flip (canvas: CustomCanvas, type: 'x'|'y') {
@@ -22,6 +24,7 @@ function flip (canvas: CustomCanvas, type: 'x'|'y') {
     o.setCoords()
   })
   canvas.requestRenderAll()
+  new history(canvas).saveData('flip' + type)
 }
 
 export {
