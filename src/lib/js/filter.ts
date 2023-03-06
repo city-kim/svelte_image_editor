@@ -1,4 +1,6 @@
 import { fabric } from 'fabric'
+import { history } from '$lib/js/canvas'
+import { canvasElement } from '$src/store/canvas'
 import type { CustomCanvas } from '$src/types/canvas'
 import type { FilterColormatrix, FilterImageControl, BlendOptions } from '$src/types/canvas'
 
@@ -73,13 +75,13 @@ class filter {
     }
 
     this.imageControl = [
-      {name: 'Brightness', filter: new fabric.Image.filters.Brightness({brightness: 0}), checked: false, value: 0, min: 0, max: 1, step: 0.1},
-      {name: 'Contrast', filter: new fabric.Image.filters.Contrast({contrast: 0}), checked: false, value: 0, min: 0, max: 1, step: 0.1},
+      {name: 'Brightness', filter: new fabric.Image.filters.Brightness({brightness: 0}), checked: false, value: 0, min: 0, max: 1, step: 0.01},
+      {name: 'Contrast', filter: new fabric.Image.filters.Contrast({contrast: 0}), checked: false, value: 0, min: 0, max: 1, step: 0.01},
       {name: 'Hue', filter: new fabric.Image.filters.HueRotation({rotation: 0}), checked: false, value: 0, min: 0, max: 2, step: 0.01},
-      {name: 'Saturation', filter: new fabric.Image.filters.Saturation({saturation: 0}), checked: false, value: 0, min: 0, max: 1, step: 0.1},
+      {name: 'Saturation', filter: new fabric.Image.filters.Saturation({saturation: 0}), checked: false, value: 0, min: 0, max: 1, step: 0.01},
       {name: 'Noise', filter: new fabric.Image.filters.Noise({noise: 5}), checked: false, value: 5, min: 5, max: 100, step: 1},
       {name: 'Pixelate', filter: new fabric.Image.filters.Pixelate({blocksize: 5}), checked: false, value: 5, min: 5, max: 100, step: 1},
-      {name: 'Blur', filter: new fabric.Image.filters.Blur({blur: 0}), checked: false, value: 0, min: 0, max: 3, step: 0.1},
+      {name: 'Blur', filter: new fabric.Image.filters.Blur({blur: 0}), checked: false, value: 0, min: 0, max: 3, step: 0.01},
     ]
   }
 
@@ -89,18 +91,21 @@ class filter {
   }
 
   setFilter(data: FilterColormatrix) {
+    // 선택된 필터를 filters에 push한다
     if (data.checked) {
       this.filters.push(data)
+      this.filterUpdate({type: 'add', target: data.name})
     } else {
       const i = this.filters.findIndex(x => x.name == data.name)
       if (i > -1) {
         this.filters.splice(i, 1)
       }
+      this.filterUpdate({type: 'remove', target: data.name})
     }
-    this.filterUpdate()
   }
 
   updateFilter (data: FilterImageControl) {
+    // 필터의 값이 조정되면 업데이트 해준다
     const i = this.filters.findIndex(x => x.name == data.name)
     if(data.name == 'Brightness') this.filters[i].filter.setOptions({brightness: data.value})
     if(data.name == 'Contrast') this.filters[i].filter.setOptions({contrast: data.value})
@@ -109,7 +114,7 @@ class filter {
     if(data.name == 'Noise') this.filters[i].filter.setOptions({noise: data.value})
     if(data.name == 'Pixelate') this.filters[i].filter.setOptions({blocksize: data.value})
     if(data.name == 'Blur') this.filters[i].filter.setOptions({blur: data.value})
-    this.filterUpdate()
+    this.filterUpdate({type: 'update', target: data.name})
   }
 
   changeBlandMode (options: BlendOptions) {
@@ -124,6 +129,7 @@ class filter {
           mode: this.Blend.mode,
           alpha: this.Blend.alpha
         })
+        this.filterUpdate({type: 'update', target: 'BlendColor'})
       } else {
         // 필터가 적용되지 않았다면 push
         this.filters.push({
@@ -135,6 +141,7 @@ class filter {
           }),
           checked: true
         })
+        this.filterUpdate({type: 'add', target: 'BlendColor'})
       }
     } else {
       // 모드가 없는경우 삭제하기
@@ -142,16 +149,19 @@ class filter {
       if (i > -1) {
         this.filters.splice(i, 1)
       }
+      this.filterUpdate({type: 'remove', target: 'BlendColor'})
     }
-    this.filterUpdate()
   }
 
-  filterUpdate () {
+  filterUpdate ({type, target}: {type: 'add'|'update'|'remove', target: string}) {
+    // canvas 이미지의 필터값을 반영해준다
     if (this.canvas) {
       const object = this.canvas.getObjects().find(x => x.type == 'image') as fabric.Image
       object.filters = this.filters.map(x => x.filter)
       object.applyFilters()
       this.canvas.requestRenderAll()
+      new history(this.canvas).saveData(`${type}_${target}`)
+      canvasElement.update(state => state)
     }
   }
 }

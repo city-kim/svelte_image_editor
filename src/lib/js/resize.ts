@@ -1,6 +1,6 @@
 import { fabric } from 'fabric'
 import { resizeElement } from '$src/store/canvas'
-import { canvasMaxWidth, canvasResize } from '$lib/js/canvas'
+import { history, canvasMaxWidth, canvasResize } from '$lib/js/canvas'
 import type { CustomCanvas } from '$src/types/canvas'
 
 class resize {
@@ -121,6 +121,7 @@ class resize {
             canvasResize(this.canvas, newimage.width, newimage.height)
           }
           this.canvas.requestRenderAll()
+          new history(this.canvas).saveData('resize')
           resizeElement.update(state => state)
       }
     }

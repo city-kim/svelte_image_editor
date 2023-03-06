@@ -1,10 +1,14 @@
 import { fabric } from 'fabric'
 import { objectLock } from '$lib/js/control'
+import { canvasElement } from '$src/store/canvas'
+import { history } from '$lib/js/canvas'
+
 import type { CustomCanvas } from '$src/types/canvas'
 import type { Color } from '$src/types/canvas'
 
 class draw {
   // 그리기모드
+  history: history
   canvas: CustomCanvas // 캔버스
   color: Color = { // 기본 색상(폴리곤 그리기용)
     stroke: '#000000',
@@ -22,12 +26,14 @@ class draw {
 
   constructor(canvas: CustomCanvas) {
     this.canvas = canvas
+    this.history = new history(this.canvas)
   }
   
   reset () {
     this.polygonMode = false
     objectLock(this.canvas, {isLock: false})
     this.endDrawing()
+    canvasElement.update(state => state)
   }
 
   setPolygonMod () {
@@ -154,6 +160,7 @@ class draw {
           fill: color.fill,
       })
       this.canvas.add(polygon)
+      this.history.saveData('add_polygon')
     }
     
     // 사용된 포인트는 모두 지운다
@@ -179,6 +186,7 @@ class draw {
     this.polygonMode = false
     this.canvas.selection = true
     objectLock(this.canvas, {isLock: false})
+    canvasElement.update(state => state)
   }
   
   startDrawing (strokeWidth: number, stroke: string) {

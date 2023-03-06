@@ -1,8 +1,8 @@
 <script lang="ts">
   import { fabric } from 'fabric'
   import { onMount } from 'svelte'
-  import { selectedComponent, canvasElement, shapeElement, drawingElement, dragElement, cropElement, resizeElement, filterElement, controlElement } from '$src/store/canvas'
-  import { loadImage, drag, Zoom, downLoadImage } from '$lib/js/canvas'
+  import { selectedComponent, canvasElement, shapeElement, drawingElement, dragElement, cropElement, resizeElement, filterElement, controlElement, historyStore } from '$src/store/canvas'
+  import { loadImage, drag, history, Zoom, downLoadImage } from '$lib/js/canvas'
   import { deleteActiveObjects } from '$lib/js/control'
   import { shape } from '$lib/js/shape'
   import { draw } from '$lib/js/draw'
@@ -16,6 +16,7 @@
 
   import defaultImage from '$lib/images/filter.png'
 
+  import Sidebar from '$component/Sidebar.svelte'
   import Controller from '$component/Controller.svelte'
 
   import Resize from '$component/canvasMenu/Resize.svelte'
@@ -53,7 +54,6 @@
 
   onMount(() => {
     const fb = fabric
-    // fb.textureSize = 4096
     fb.filterBackend = new fabric.Canvas2dFilterBackend()
 
     // 마운트시 캔버스 선언 및 remove 이벤트 리스너 추가하기
@@ -84,8 +84,15 @@
     $canvasElement.on('mouse:up', () => {
       if ($cropElement.cropMode) $cropElement.endDrawing()// crop object 그리기
       if ($dragElement.dragMode) $dragElement.isDragging = false // 드래그중 끄기
-      if ($shapeElement.shapeMode) { // 도형 그리기 시작
+      if ($shapeElement.shapeMode) {
+        // 도형그리기 종료후 리셋과 저장
         $shapeElement.reset()
+        new history($canvasElement).saveData('add_shape')
+      }
+      if ($canvasElement.isDrawingMode) {
+        // path 드로잉 세이브
+        canvasElement.update(state => state)
+        new history($canvasElement).saveData('path')
       }
     })
 
@@ -110,6 +117,14 @@
       if ($cropElement.cropMode) $cropElement.updateCropScale() // crop 그리기시작
     })
 
+    $canvasElement.on("object:modified", (e) => {
+      if (e.target) {
+        if (e.target.type != 'image' && e.target.type != 'crop') {
+          const name = e.action ? e.action : e.target.type ? e.target.type : 'todo'
+          new history($canvasElement).saveData(name)
+        }
+      }
+    });
     
     setDefaultimage()
     document.addEventListener('keydown', hotKey)
@@ -122,7 +137,7 @@
     const response = await fetch(defaultImage)
     const data = await response.blob()
     try {
-      const image = await loadImage($canvasElement, new File([data], 'earth', { type: data.type}))
+      await loadImage($canvasElement, new File([data], 'earth', { type: data.type}))
       $filterElement.setImage($canvasElement)
     } catch (e) {
       console.error(e)
@@ -148,13 +163,19 @@
     if (e.key === 'Delete') {
       // 삭제
       deleteActiveObjects($canvasElement)
-    } else if (e.key === 'c' && e.ctrlKey) {
-        // 복사
-        $controlElement.copy()
-      } else if (e.key === 'v' && e.ctrlKey) {
-        // 붙여넣기
-        $controlElement.paste()
-      }
+    } else if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
+      // 복사
+      $controlElement.copy()
+    } else if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
+      // 붙여넣기
+      $controlElement.paste()
+    } else if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+      // 실행취소
+      new history($canvasElement).change({type: 'undo'})
+    } else if (e.key === 'y' && (e.ctrlKey || e.metaKey)) {
+      // 재실행
+      new history($canvasElement).change({type: 'redo'})
+    }
   }
 
   function setCanvasOption (e: fabric.IEvent) {
@@ -195,9 +216,9 @@
   <div class="editor-control-container">
     <Controller></Controller>
   </div>
-  <div class="editor-canvas-container">
+  <Sidebar>
     <canvas bind:this={ctx} ></canvas>
-  </div>
+  </Sidebar>
   <div class="editor-menu">
     <svelte:component this={$selectedComponent.component} bind:this={component}/>
     <ul class="editor-menu-list">
