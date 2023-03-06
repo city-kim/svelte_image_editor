@@ -70,6 +70,11 @@ class history {
     this.canvas = canvas
   }
 
+  reset () {
+    // history 초기화한다
+    historyStore.set([])
+  }
+
   saveData (name: string) {
     // 세이브 추가 active된 index 찾기
     let history: HistoryList | undefined
@@ -145,7 +150,6 @@ class history {
             if (from?.name == 'resize' || from?.name == 'crop') {
               // 리사이즈 혹은 crop인경우 캔버스 사이즈 재조정
               const image = this.canvas.getObjects().find(x => x.type == 'image')
-              console.log(image)
               if (image && image.width && image.height) canvasResize(this.canvas, image.width, image.height)
             }
             canvasElement.update(state => state)
@@ -189,8 +193,10 @@ async function loadImage(canvas: CustomCanvas, image: File) {
 
       canvas.centerObject(img)
       canvas.add(img);
-        
+
       const object = canvas.getObjects().find(x => x.type == 'image')
+      // 이 시점에 히스토리 초기화
+      new history(canvas).reset()
       if (object) {
         object.set({ hasBorders: false, hasControls: false, selectable: false, hoverCursor: 'default' })
         canvas.requestRenderAll()
