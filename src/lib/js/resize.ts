@@ -18,8 +18,8 @@ class resize {
   constructor(canvas: CustomCanvas) {
     this.canvas = canvas
     this.baseSize = {
-      width: canvas.imageSize.width || 0,
-      height: canvas.imageSize.height || 0
+      width: canvas.imageSize?.width || 0,
+      height: canvas.imageSize?.height || 0
     }
     this.newSize = {
       width: this.baseSize.width,
@@ -29,9 +29,11 @@ class resize {
 
   reset () {
     // 리셋하기
-    this.baseSize = { // 베이스는 이미지사이즈로 한다
-      width: this.canvas.imageSize.width,
-      height: this.canvas.imageSize.height,
+    if ( this.canvas.imageSize) {
+      this.baseSize = { // 베이스는 이미지사이즈로 한다
+        width: this.canvas.imageSize.width,
+        height: this.canvas.imageSize.height,
+      }
     }
 
     if (this.baseSize.width != this.newSize.width || this.baseSize.height != this.newSize.height) {
