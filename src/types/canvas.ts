@@ -6,7 +6,7 @@ interface LeaveComponent {
 }
 
 interface CustomCanvas extends fabric.Canvas {
-  imageSize?: {
+  imageSize: {
     width: number
     height: number
   }
