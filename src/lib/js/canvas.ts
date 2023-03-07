@@ -316,6 +316,14 @@ function downLoadImage(canvas: CustomCanvas) {
   link.remove()
 }
 
+function generateImageUrl(canvas: CustomCanvas) {
+  const name = canvas.imagePath ? canvas.imagePath : 'sample.png'
+  const url = canvas.toDataURL({
+    format: name.substring(name.lastIndexOf('.')).replace('.', '')
+  })
+  return url
+}
+
 function selectObject (canvas: CustomCanvas, index: number) {
   canvas.discardActiveObject()
   const objects = canvas.getObjects()
@@ -329,8 +337,9 @@ export {
   loadImage,
   canvasResize,
   canvasMaxWidth,
+  Zoom,
   setVariable,
   downLoadImage,
-  Zoom,
+  generateImageUrl,
   selectObject
 }

@@ -7,7 +7,6 @@
 
   $: {
     if ($canvasElement) {
-      console.log($canvasElement.getObjects())
       data = $canvasElement.getObjects()
     }
   }

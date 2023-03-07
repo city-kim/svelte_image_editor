@@ -2,7 +2,7 @@
   import { fabric } from 'fabric'
   import { onMount } from 'svelte'
   import { selectedComponent, canvasElement, shapeElement, drawingElement, dragElement, cropElement, resizeElement, filterElement, controlElement, historyStore } from '$src/store/canvas'
-  import { loadImage, drag, history, Zoom, downLoadImage } from '$lib/js/canvas'
+  import { loadImage, drag, history, Zoom, downLoadImage, generateImageUrl } from '$lib/js/canvas'
   import { deleteActiveObjects } from '$lib/js/control'
   import { shape } from '$lib/js/shape'
   import { draw } from '$lib/js/draw'
@@ -28,6 +28,7 @@
   import Filter from '$component/canvasMenu/Filter.svelte'
 
   let ctx: HTMLCanvasElement // 캔버스 element
+  let imageDrop: HTMLDivElement // 이미지 drop 영역
 
   $selectedComponent = {
     name: 'filter',
@@ -50,7 +51,7 @@
   let files: FileList
   let fileInput: HTMLInputElement
 
-  // let fb = fabric
+  let downLoadUrl: string
 
   onMount(() => {
     const fb = fabric
@@ -132,6 +133,12 @@
       document.removeEventListener('keydown', hotKey)
     }
   })
+  
+  function handleDragDrop (e: DragEvent) {
+    // 이미지 드랍시
+    const file = e.dataTransfer && e.dataTransfer.files ? e.dataTransfer.files[0] : null
+    if (file) loadImage($canvasElement, file)
+  }
 
   async function setDefaultimage () {
     const response = await fetch(defaultImage)
@@ -193,12 +200,19 @@
 
   function downLoad () {
     // 이미지 다운로드하기
-    downLoadImage($canvasElement)
+    if (window.self !== window.top) {
+      // iframe으로 실행한경우
+      downLoadUrl = generateImageUrl($canvasElement)
+    } else {
+      // local에서 실행한경우
+      downLoadImage($canvasElement)
+    }
   }
 
 </script>
-
-<div class="editor">
+<div class="editor"
+  on:drop|preventDefault={handleDragDrop}
+  bind:this={imageDrop}>
   <section class="editor-header">
     <h1>IMAGE EDITOR</h1>
     <div class="editor-header-buttons">
@@ -231,4 +245,22 @@
       {/each}
     </ul>
   </div>
+  {#if downLoadUrl}
+    <div class="image-popup">
+      <figure>
+        <figcaption>
+          <h2>can't download images from codesandbox</h2>
+          <button type="button"
+            on:click={() => downLoadUrl = ''}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+              <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+            </svg>
+          </button>
+        </figcaption>
+        <img src={downLoadUrl} alt="downloadimage"/>
+        <p>cause: Download is disallowed. The frame initiating or instantiating the download is sandboxed, but the flag ‘allow-downloads’ is not set. See https://www.chromestatus.com/feature/5706745674465280 for more details.</p>
+      </figure>
+    </div>
+  {/if}
 </div>
