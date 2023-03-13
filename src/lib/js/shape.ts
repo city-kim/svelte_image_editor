@@ -1,6 +1,7 @@
 import { fabric } from 'fabric'
 import { canvasElement } from '$src/store/canvas'
 import { history } from '$lib/js/canvas'
+import { objectLock } from '$lib/js/control'
 import type { CustomCanvas } from '$src/types/canvas'
 import type { Color } from '$src/types/canvas'
 
@@ -39,18 +40,12 @@ class shape {
     this.drawing = false
     this.startX = 0
     this.startY = 0
+    objectLock(this.canvas, {isLock: false})
     if (this.target) {
       // 타겟이 있는경우 모든객체 active 해제
-      this.canvas.discardActiveObject()
-      // 생성된 객체 selection 설정
-      const select = new fabric.ActiveSelection([this.target], {
-        canvas: this.canvas,
-        cornerSize: this.canvas.cornerSize,
-        ...this.optionGroup
-      });
-      // 생성된 객체 선택
-      this.canvas.setActiveObject(select);
-      this.canvas.requestRenderAll();
+      const result = this.canvas.getObjects().find(x => x == this.target)
+      if (result) this.canvas.setActiveObject(result)
+      this.canvas.requestRenderAll()
     }
     this.target = null
     this.canvas.selection = true
@@ -80,8 +75,8 @@ class shape {
         this.target.set({ top: Math.abs(pointer.y) });
       }
 
-      const width = Math.abs(this.startX - pointer.x)
-      const height = Math.abs(this.startY - pointer.y)
+      const width = this.startX - pointer.x
+      const height = this.startY - pointer.y
       if (this.shapeTarget == 'rect' || this.shapeTarget == 'triangle') {
         // 사각형이나 삼각형인경우
         this.target.set({
@@ -121,6 +116,7 @@ class shape {
       ...this.optionGroup,
       cornerSize: this.canvas.cornerSize
     })
+    objectLock(this.canvas, {isLock: true})
   }
 
   setCircle (strokeWidth: number, color: Color) {
@@ -135,6 +131,7 @@ class shape {
       ...this.optionGroup,
       cornerSize: this.canvas.cornerSize
     })
+    objectLock(this.canvas, {isLock: true})
   }
 
   setTriangle (strokeWidth: number, color: Color) {
@@ -150,6 +147,7 @@ class shape {
       ...this.optionGroup,
       cornerSize: this.canvas.cornerSize
     })
+    objectLock(this.canvas, {isLock: true})
   }
 
   setStar (strokeWidth: number, color: Color) {
@@ -164,6 +162,7 @@ class shape {
       ...this.optionGroup,
       cornerSize: this.canvas.cornerSize
     })
+    objectLock(this.canvas, {isLock: true})
   }
 
   addText (strokeWidth: number, color: Color, fontSize: number, isBold: boolean) {

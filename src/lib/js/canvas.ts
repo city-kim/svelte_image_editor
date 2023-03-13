@@ -25,7 +25,9 @@ class drag {
 
   endDrag () {
     // 드래그 종료
-    objectLock(this.canvas, {isLock: false})
+    if (this.dragMode) {
+      objectLock(this.canvas, {isLock: false})
+    }
     this.canvas.defaultCursor = 'default'
     this.canvas.selection = true
     this.dragMode = false
@@ -163,51 +165,38 @@ class history {
 
 async function loadImage(canvas: CustomCanvas, image: File) {
   const event = await fileLoad(image)
-  // 파일로드 완료시 기존내용 초기화
-  canvas.clear()
-  canvas.imagePath = ''
-
-  canvas.imagePath = image.name
-
   const imgObj = new Image()
   if (event.target?.result && typeof event.target?.result == 'string') {
     imgObj.src = event.target.result
   }
 
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    imgObj.onload = async () => {
-      const img = new fabric.Image(imgObj)
-      if (img.width && img.height) {
-        // 이미지 크기가 있다면
-        if (canvas.width && canvas.height) {
-          // 이미지는 기본 중앙에 위치하도록
-          img.set({
-            left: canvas.width / 2,
-            top: canvas.height / 2,
-          })
-        }
+  imgObj.onload = async () => {
+    // 이미지가 정상적으로 로드되었다면 초기화
+    canvas.clear()
+    canvas.imagePath = image.name
 
-        // 캔버스 element의 크기가 너무 크지않게 조정(내부 이미지 사이즈는 원본유지하기위함)
-        canvasResize(canvas, img.width, img.height)
-      }
-
-      canvas.centerObject(img)
-      canvas.add(img);
-
-      const object = canvas.getObjects().find(x => x.type == 'image')
-      // 이 시점에 히스토리 초기화
-      new history(canvas).reset()
-      if (object) {
-        object.set({ hasBorders: false, hasControls: false, selectable: false, hoverCursor: 'default' })
-        canvas.requestRenderAll()
-        new history(canvas).saveData('image_load')
-        resolve(imgObj)
-      }
+    const img = new fabric.Image(imgObj)
+    if (img.width && img.height) {
+      // 캔버스 container의 크기가 너무 크지않게 조정(내부 이미지 사이즈는 원본유지하기위함)
+      canvasResize(canvas, img.width, img.height)
     }
-    imgObj.onerror = error => {
-      reject(error)
+
+    canvas.centerObject(img)
+    canvas.add(img);
+
+    const object = canvas.getObjects().find(x => x.type == 'image')
+    // 이 시점에 히스토리 초기화
+    new history(canvas).reset()
+    if (object) {
+      object.set({ hasBorders: false, hasControls: false, selectable: false, hoverCursor: 'default' })
+      canvas.requestRenderAll()
+      new history(canvas).saveData('image_load')
     }
-  })
+  }
+  imgObj.onerror = error => {
+    console.log(error)
+    alert('이미지를 로드할 수 없습니다')
+  }
 }
 
 async function fileLoad(file: File) {

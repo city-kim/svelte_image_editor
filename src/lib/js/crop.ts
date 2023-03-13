@@ -45,57 +45,35 @@ class crop {
   }
 
   drawCrop (options: fabric.IEvent<MouseEvent>) {
-    // 도형 그리기
-    if (!this.canvas.getActiveObject()) {
-      // active중인 object가 없는 경우에만는경우만
+    // crop 그리기
+    if (options.target?.type != 'crop') {
+      // 클릭 대상이 crop이 아닌경우만 active객체 모두 선택해제후 다시그리기
+      this.canvas.discardActiveObject()
       const pointer = this.canvas.getPointer(options.e)
       if (this.target) {
-        // 타겟이 이미 있는 경우
-        let isInnerArea = { x: false, y: false }
-        if (pointer.x && pointer.y) {
-          // 포인터가 있는경우
-          if (this.target.left && this.target.width) {
-            if (pointer.x > this.target.left && pointer.x < this.target.left + this.target.width) {
-              // 현재 생성된 박스 영역 내부일경우
-              isInnerArea.x = true
-            }
-          }
-          if (this.target.top && this.target.height) {
-            if (pointer.x > this.target.top && pointer.x < this.target.top + this.target.height) {
-              // 현재 생성된 박스 영역 내부일경우
-              isInnerArea.y = true
-            }
-          }
-        }
-        if (!isInnerArea.x || !isInnerArea.y) {
-          // 외부영역일 경우만
-          this.canvas.remove(this.target)
-          this.target = null
-        }
+        // 이미 존재한다면 삭제하기
+        this.canvas.remove(this.target)
       }
-
-      if (!this.target) {
-        // 박스 새로생성
-        this.target = new fabric.Rect({
-          type: 'crop',
-          strokeWidth: this.strokeWidth,
-          stroke: this.stroke,
-          fill: this.fill,
-          cornerSize: this.canvas.cornerSize,
-          transparentCorners: false,
-          hoverCursor: 'move'
-        })
-        this.target.setControlsVisibility(this.visibleOption)
-        this.canvas.add(this.target)
-        if (this.target) {
-          // 시작점 좌표 설정
-          this.target.left = this.startX = pointer.x || 0
-          this.target.top = this.startY = pointer.y || 0
-        }
-        // 드로잉 켜주기
-        this.canvas.requestRenderAll()
-        this.drawing = true
+      // 박스 새로생성
+      this.target = new fabric.Rect({
+        type: 'crop',
+        strokeWidth: this.strokeWidth,
+        stroke: this.stroke,
+        fill: this.fill,
+        cornerSize: this.canvas.cornerSize,
+        transparentCorners: false,
+        hoverCursor: 'move'
+      })
+      this.target.setControlsVisibility(this.visibleOption)
+      this.canvas.add(this.target)
+      if (this.target) {
+        // 시작점 좌표 설정
+        this.target.left = this.startX = pointer.x || 0
+        this.target.top = this.startY = pointer.y || 0
       }
+      // 드로잉 켜주기
+      this.canvas.requestRenderAll()
+      this.drawing = true 
     }
   }
 
