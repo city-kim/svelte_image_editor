@@ -218,8 +218,7 @@
     <div class="editor-header-buttons">
       <label>
         Load Image
-        <input 
-          type="file"
+        <input type="file"
           bind:files
           bind:this={fileInput}
           on:change={mountImage}/>
@@ -231,7 +230,7 @@
     <Controller></Controller>
   </div>
   <Sidebar>
-    <canvas bind:this={ctx} ></canvas>
+    <canvas width="1280" height="720" bind:this={ctx} ></canvas>
   </Sidebar>
   <div class="editor-menu">
     <svelte:component this={$selectedComponent.component} bind:this={component}/>

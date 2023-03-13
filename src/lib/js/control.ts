@@ -60,6 +60,7 @@ class control {
 // 캔버스 내부 오브젝트에 대한 컨트롤을 담당
 function objectLock(canvas: CustomCanvas, {isLock}: {isLock?: boolean}) {
   // isLock = true면 잠금 false면 해제
+  canvas.discardActiveObject()
   canvas.forEachObject((o) => {
     if (o.type != 'image') {
       // 이미지는 항상 제외
