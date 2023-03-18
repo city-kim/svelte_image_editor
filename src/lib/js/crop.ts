@@ -105,9 +105,13 @@ class crop {
         const top = Math.max(0, pointer.y)
         if(this.startX > pointer.x) {
           this.target.set({ left: left })
+        } else {
+          this.target.set({ left: this.startX })
         }
         if(this.startY > pointer.y) {
           this.target.set({ top: top })
+        } else {
+          this.target.set({ top: this.startY })
         }
   
         const width = Math.abs(this.startX - left)

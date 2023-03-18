@@ -31,8 +31,8 @@
   let imageDrop: HTMLDivElement // 이미지 drop 영역
 
   $selectedComponent = {
-    name: 'filter',
-    component: Filter
+    name: 'shape',
+    component: Shape
   }
 
   let component: SvelteComponentTyped<Shape|Draw> // 컴포넌트 바인딩

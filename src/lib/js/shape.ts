@@ -70,9 +70,13 @@ class shape {
       // 마우스 포인터가 시작점보다 작으면 object 위치보정
       if(this.startX > pointer.x) {
         this.target.set({ left: Math.abs(pointer.x) });
+      } else {
+        this.target.set({ left: this.startX });
       }
       if(this.startY > pointer.y) {
         this.target.set({ top: Math.abs(pointer.y) });
+      } else {
+        this.target.set({ top: this.startY });
       }
 
       const width = this.startX - pointer.x
