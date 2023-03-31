@@ -64,7 +64,7 @@ interface CropOtions {
 
 interface FilterColormatrix {
   name: string
-  filter: fabric.IGrayscaleFilter
+  filter: fabric.IBaseFilter
   checked: boolean
 }
 
