@@ -62,12 +62,15 @@ class filter {
   }
 
   reset () {
+    // 필터 초기화
     this.Colormatrix = [
+      // 컬러매트릭스 필터
       {name: 'Grayscale', filter: new fabric.Image.filters.Grayscale(), checked: false},
       {name: 'Invert', filter: new fabric.Image.filters.Invert(), checked: false},
       {name: 'Sepia', filter: new fabric.Image.filters.Sepia(), checked: false},
     ]
     for (let k in matrices) {
+      // 선언된 matrices를 Colormatrix에 push한다
       const key = k as 'Brownie'|'Vintage'|'Kodachrome'|'Technicolor'|'Polaroid'|'BlackWhite'
       this.Colormatrix.push({
         name: key, filter: new fabric.Image.filters.ColorMatrix({ matrix: matrices[key] }), checked: false,
@@ -75,6 +78,7 @@ class filter {
     }
 
     this.imageControl = [
+      // 이미지 조정 필터
       {name: 'Brightness', filter: new fabric.Image.filters.Brightness({brightness: 0}), checked: false, value: 0, min: 0, max: 1, step: 0.01},
       {name: 'Contrast', filter: new fabric.Image.filters.Contrast({contrast: 0}), checked: false, value: 0, min: 0, max: 1, step: 0.01},
       {name: 'Hue', filter: new fabric.Image.filters.HueRotation({rotation: 0}), checked: false, value: 0, min: 0, max: 2, step: 0.01},
@@ -86,6 +90,7 @@ class filter {
   }
 
   setImage(canvas: CustomCanvas) {
+    // 이미지를 캔버스에 띄우는용도
     this.canvas = canvas
     // this.setFilter()
   }
@@ -106,14 +111,11 @@ class filter {
 
   updateFilter (data: FilterImageControl) {
     // 필터의 값이 조정되면 업데이트 해준다
-    const i = this.filters.findIndex(x => x.name == data.name)
-    if(data.name == 'Brightness') this.filters[i].filter.setOptions({brightness: data.value})
-    if(data.name == 'Contrast') this.filters[i].filter.setOptions({contrast: data.value})
-    if(data.name == 'Hue') this.filters[i].filter.setOptions({rotation: data.value})
-    if(data.name == 'Saturation') this.filters[i].filter.setOptions({saturation: data.value})
-    if(data.name == 'Noise') this.filters[i].filter.setOptions({noise: data.value})
-    if(data.name == 'Pixelate') this.filters[i].filter.setOptions({blocksize: data.value})
-    if(data.name == 'Blur') this.filters[i].filter.setOptions({blur: data.value})
+    const result = this.filters.find(x => x.name == data.name)
+    if (result) {
+      // 값을 찾았다면 업데이트한다
+      result.filter.setOptions({[data.name.toLowerCase()]: data.value})
+    }
     this.filterUpdate({type: 'update', target: data.name})
   }
 
@@ -122,24 +124,17 @@ class filter {
     this.Blend = options
     const i = this.filters.findIndex(x => x.name == 'BlendColor')
     if (this.Blend.mode) {
-      if (i > -1) {
+      const data = this.filters.find(x => x.name == 'BlendColor')
+      if (data) {
         // 이미 적용된경우 업데이트
-        this.filters[i].filter.setOptions({
-          color: this.Blend.color,
-          mode: this.Blend.mode,
-          alpha: this.Blend.alpha
-        })
+        data.filter.setOptions({...this.Blend})
         this.filterUpdate({type: 'update', target: 'BlendColor'})
       } else {
         // 필터가 적용되지 않았다면 push
         this.filters.push({
           name: 'BlendColor',
-          filter: new fabric.Image.filters.BlendColor({
-            color: this.Blend.color,
-            mode: this.Blend.mode,
-            alpha: this.Blend.alpha
-          }),
-          checked: true
+          checked: true,
+          filter: new fabric.Image.filters.BlendColor({...this.Blend})
         })
         this.filterUpdate({type: 'add', target: 'BlendColor'})
       }

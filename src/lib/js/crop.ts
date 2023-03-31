@@ -57,8 +57,6 @@ class crop {
       // 박스 새로생성
       this.target = new fabric.Rect({
         type: 'crop',
-        strokeWidth: this.strokeWidth,
-        stroke: this.stroke,
         fill: this.fill,
         cornerSize: this.canvas.cornerSize,
         transparentCorners: false,
@@ -81,8 +79,6 @@ class crop {
     if (this.target) {
       this.canvas.setActiveObject(this.target)
       this.target.set({
-        strokeWidth: this.strokeWidth,
-        stroke: this.stroke,
         fill: this.fill,
       })
       this.canvas.requestRenderAll()
@@ -91,11 +87,12 @@ class crop {
       this.cropType = ''
       this.drawing = false
     }
+    this.cropMode = false
   }
 
   updateCrop (options: fabric.IEvent<MouseEvent>) {
     // 크롭 업데이트
-    if (this.target && this.canvas.width && this.canvas.height) {
+    if (this.cropMode && this.target && this.canvas.width && this.canvas.height) {
       if (this.drawing) {
         // 직접그리기
         const pointer = this.canvas.getPointer(options.e)
@@ -105,17 +102,21 @@ class crop {
         const top = Math.max(0, pointer.y)
         if(this.startX > pointer.x) {
           this.target.set({ left: left })
+        } else {
+          this.target.set({ left: this.startX })
         }
         if(this.startY > pointer.y) {
           this.target.set({ top: top })
+        } else {
+          this.target.set({ top: this.startY })
         }
   
         const width = Math.abs(this.startX - left)
         const height = Math.abs(this.startY - top)
         
         this.target.set({
-          width: pointer.x > this.canvas.width ? this.canvas.width - this.startX : width,
-          height: pointer.y > this.canvas.height ? this.canvas.height - this.startY : height,
+          width: width,
+          height: height,
         })
       } else {
         // 그리기가 아닌경우
@@ -124,6 +125,7 @@ class crop {
           this.target.set({
             left: Math.min(Math.max(this.target.left, 0), this.canvas.width - this.target.width * this.target.scaleX),
             top: Math.min(Math.max(this.target.top, 0), this.canvas.height - this.target.height * this.target.scaleY),
+            fill: this.fill,
           })
           this.target.setCoords()
         }
@@ -133,49 +135,28 @@ class crop {
   }
 
   updateCropScale () {
-    if (this.target) {
+    if (this.target && this.cropMode) {
       if (this.canvas.width && this.canvas.height &&
         this.target.width && this.target.height &&
         typeof this.target.left == 'number' && typeof this.target.top == 'number' &&
         this.target.scaleX && this.target.scaleY)
       {
-        if (this.cropType) {
-          // 세팅된경우
-          // 크기는 음수이동이 안되게 제한
-          this.target.set({
-            left: Math.max(this.target.left, 0),
-            top: Math.max(this.target.top, 0),
-          })
-          // 최대값은 sacle 배율로 정한다
-          const max = {
-            x: (this.canvas.width - this.target.left) / this.target.width,
-            y: (this.canvas.height - this.target.top) / this.target.height,
-          }
-          // 가로세로 비율이 동일하게 지정
-          const ratio = Math.min(Math.min(this.target.scaleX, max.x), Math.min(this.target.scaleY, max.y))
-          this.target.set({
-            scaleX: ratio,
-            scaleY: ratio,
-          })
-        } else {
-          // free drawing인경우 크기제한
-          const scale = {
-            x: this.target.left < 0 ? 1 : this.target.scaleX,
-            y: this.target.top < 0 ? 1 : this.target.scaleY,
-          }
-          const max = {
-            x: Math.min((this.canvas.width - Math.max(0, this.target.left)) / this.target.width, scale.x),
-            y: Math.min((this.canvas.height - Math.max(0, this.target.top)) / this.target.height, scale.y),
-          }
-          this.target.set({
-            width: this.target.width * max.x,
-            height: this.target.height * max.y,
-            scaleX: 1,
-            scaleY: 1,
-            stroke: undefined,
-            fill: undefined,
-          })
+        // 크기는 음수이동이 안되게 제한
+        this.target.set({
+          left: Math.max(this.target.left, 0),
+          top: Math.max(this.target.top, 0),
+        })
+        // 최대값은 sacle 배율로 정한다
+        const max = {
+          x: (this.canvas.width - this.target.left) / this.target.width,
+          y: (this.canvas.height - this.target.top) / this.target.height,
         }
+        // 가로세로 비율이 동일하게 지정
+        const ratio = Math.min(Math.min(this.target.scaleX, max.x), Math.min(this.target.scaleY, max.y))
+        this.target.set({
+          scaleX: ratio,
+          scaleY: ratio,
+        })
       }
     }
     this.canvas.requestRenderAll()
