@@ -12,3 +12,6 @@ https://kit.svelte.dev/docs/introduction
 
 fabric js
 http://fabricjs.com/docs/
+
+live demo
+https://codesandbox.io/p/sandbox/svelte-image-editor-5f41q2
