@@ -43,6 +43,7 @@ declare module '$env/static/private' {
 	export const HOMEPATH: string;
 	export const INIT_CWD: string;
 	export const LANG: string;
+	export const LD_LIBRARY_PATH: string;
 	export const LOCALAPPDATA: string;
 	export const LOGONSERVER: string;
 	export const NODE: string;
@@ -179,6 +180,7 @@ declare module '$env/dynamic/private' {
 		HOMEPATH: string;
 		INIT_CWD: string;
 		LANG: string;
+		LD_LIBRARY_PATH: string;
 		LOCALAPPDATA: string;
 		LOGONSERVER: string;
 		NODE: string;
